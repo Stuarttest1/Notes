@@ -1,6 +1,8 @@
 # Ignore build outputs
 bin/
 obj/
+dist/
+build/
 
 # Ignore user-specific files
 *.user
@@ -27,4 +29,11 @@ AppInstaller/
 *.pid
 *.seed
 *.pid.lock
+Thumbs.db
+
+# Ignore node_modules directory
+node_modules/
+
+# Ignore environment variables
+.env
 ```
