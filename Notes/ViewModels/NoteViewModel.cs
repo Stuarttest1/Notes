@@ -1,78 +1,86 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System.Windows.Input;
+using Notes.Data;
+using Notes.Models;
+
 
 namespace Notes.ViewModels;
 
-internal class NoteViewModel : ObservableObject, IQueryAttributable
+public partial class NoteViewModel : ObservableObject, IQueryAttributable
 {
-    private Models.Note _note;
-
-    public string Text
+  private Models.Note _note;
+  private NotesDbContext _context;
+  public string Text
+  {
+    get => _note.Text;
+    set
     {
-        get => _note.Text;
-        set
-        {
-            if (_note.Text != value)
-            {
-                _note.Text = value;
-                OnPropertyChanged();
-            }
-        }
+      if (_note.Text != value)
+      {
+        _note.Text = value;
+        OnPropertyChanged();
+      }
     }
+  }
 
-    public DateTime Date => _note.Date;
+  public DateTime Date => _note.Date;
 
-    public string Identifier => _note.Filename;
+  public int Id => _note.Id;
 
-    public ICommand SaveCommand { get; private set; }
-    public ICommand DeleteCommand { get; private set; }
 
-    public NoteViewModel()
+
+  public NoteViewModel(NotesDbContext notesDbContext)
+  {
+    _context = notesDbContext;
+    _note = new Note();
+  }
+
+  public NoteViewModel(NotesDbContext notesDbContext, Note note)
+  {
+    _note = note;
+    _context = notesDbContext;
+  }
+
+
+  [RelayCommand]
+  private async Task Save()
+  {
+    _note.Date = DateTime.Now;
+    if (_note.Id == 0)
     {
-        _note = new Models.Note();
-        SaveCommand = new AsyncRelayCommand(Save);
-        DeleteCommand = new AsyncRelayCommand(Delete);
+      _context.Notes.Add(_note);
     }
+    _context.SaveChanges();
+    await Shell.Current.GoToAsync($"..?saved={_note.Id}");
+  }
 
-    public NoteViewModel(Models.Note note)
-    {
-        _note = note;
-        SaveCommand = new AsyncRelayCommand(Save);
-        DeleteCommand = new AsyncRelayCommand(Delete);
-    }
+  [RelayCommand]
+  private async Task Delete()
+  {
+    _context.Remove(_note);
+    _context.SaveChanges();
+    await Shell.Current.GoToAsync($"..?deleted={_note.Id}");
+  }
 
-    private async Task Save()
+  void IQueryAttributable.ApplyQueryAttributes(IDictionary<string, object> query)
+  {
+    if (query.ContainsKey("load"))
     {
-        _note.Date = DateTime.Now;
-        _note.Save();
-        await Shell.Current.GoToAsync($"..?saved={_note.Filename}");
+      _note = _context.Notes.Single(n => n.Id == int.Parse(query["load"].ToString()));
+      RefreshProperties();
     }
+  }
 
-    private async Task Delete()
-    {
-        _note.Delete();
-        await Shell.Current.GoToAsync($"..?deleted={_note.Filename}");
-    }
+  public void Reload()
+  {
+    _context.Entry(_note).Reload();
+    RefreshProperties();
+  }
 
-    void IQueryAttributable.ApplyQueryAttributes(IDictionary<string, object> query)
-    {
-        if (query.ContainsKey("load"))
-        {
-            _note = Models.Note.Load(query["load"].ToString());
-            RefreshProperties();
-        }
-    }
+  private void RefreshProperties()
+  {
+    OnPropertyChanged(nameof(Text));
+    OnPropertyChanged(nameof(Date));
+  }
 
-    public void Reload()
-    {
-        _note = Models.Note.Load(_note.Filename);
-        RefreshProperties();
-    }
-
-    private void RefreshProperties()
-    {
-        OnPropertyChanged(nameof(Text));
-        OnPropertyChanged(nameof(Date));
-    }
 }
