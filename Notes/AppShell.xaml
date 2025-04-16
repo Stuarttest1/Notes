@@ -16,6 +16,10 @@
             Title="About"
             ContentTemplate="{DataTemplate views:AboutPage}"
             Icon="{OnPlatform 'icon_about.png', iOS='icon_about_ios.png', MacCatalyst='icon_about_ios.png'}" />
+                  <ShellContent
+            Title="Playpen"
+            ContentTemplate="{DataTemplate views:Playpen}"
+            Icon="{OnPlatform 'icon_about.png', iOS='icon_Playpenios.png', MacCatalyst='icon_Playpen_ios.png'}" />
     </TabBar>
 
 </Shell>

@@ -36,4 +36,7 @@ node_modules/
 
 # Ignore environment variables
 .env
-```
+
+# Ignore Notes.Test build outputs
+Notes.Test/obj/
+Notes.Test/bin/
